@@ -61,6 +61,7 @@ a = Analysis(
         "core.urls",
         "core.wsgi",
         "core.context_processors",
+        "certifi",
     ],
     hookspath=[],
     hooksconfig={},

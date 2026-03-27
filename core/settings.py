@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Current version — update on each release
-VERSION = "2.2.0"
+VERSION = "2.2.1"
 
 # Native macOS app vs Docker detection
 IS_NATIVE_APP = os.environ.get("RESPECTASO_NATIVE") == "1" or getattr(sys, "frozen", False)
@@ -111,3 +111,33 @@ if IS_NATIVE_APP:
     for p in range(8000, 8100):
         CSRF_TRUSTED_ORIGINS.append(f"http://127.0.0.1:{p}")
         CSRF_TRUSTED_ORIGINS.append(f"http://localhost:{p}")
+
+# Logging — write to a file in the data directory for the native app
+if IS_NATIVE_APP:
+    _log_file = DATA_DIR / "respectaso.log"
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "simple": {
+                "format": "%(asctime)s %(levelname)s %(name)s: %(message)s",
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+            },
+        },
+        "handlers": {
+            "file": {
+                "level": "WARNING",
+                "class": "logging.handlers.RotatingFileHandler",
+                "filename": str(_log_file),
+                "maxBytes": 1_048_576,  # 1 MB
+                "backupCount": 1,
+                "formatter": "simple",
+            },
+        },
+        "loggers": {
+            "aso": {
+                "handlers": ["file"],
+                "level": "WARNING",
+            },
+        },
+    }

@@ -5,6 +5,8 @@ import re
 import time
 import urllib.request
 
+logger = logging.getLogger(__name__)
+
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
@@ -1153,9 +1155,9 @@ def version_check_view(request):
             "download_url": download_url,
             "is_native": is_native,
         })
-    except Exception:
-        # Network error, GitHub down, etc. — silently fail
-        return JsonResponse({"update_available": False, "current": current, "is_native": is_native})
+    except Exception as e:
+        logger.warning("Update check failed: %s: %s", type(e).__name__, e)
+        return JsonResponse({"update_available": False, "error": type(e).__name__, "current": current, "is_native": is_native})
 
 
 def auto_refresh_status_view(request):

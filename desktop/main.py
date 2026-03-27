@@ -107,6 +107,10 @@ def main():
     secret_key = ensure_secret_key(data_dir)
     os.environ["SECRET_KEY"] = secret_key
 
+    # Ensure SSL certificate verification works inside PyInstaller bundle
+    import certifi
+    os.environ["SSL_CERT_FILE"] = certifi.where()
+
     # Setup Django
     import django
 
