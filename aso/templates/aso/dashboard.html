@@ -31,7 +31,7 @@
                        class="hidden text-xs font-medium text-white bg-purple-600 hover:bg-purple-500 rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap">
                         Download Update
                     </a>
-                    <a id="update-instructions-btn" href="{% url 'aso:setup' %}#updating"
+                    <a id="update-instructions-btn" href="{% if 'aso_pro' in INSTALLED_APPS %}{% url 'aso_pro:settings_setup' %}{% else %}{% url 'aso:setup' %}{% endif %}#updating"
                        class="hidden text-xs font-medium text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap">
                         Update instructions →
                     </a>
@@ -126,6 +126,9 @@
         <div class="bg-[#1e293b] border border-white/10 rounded-xl p-8 text-center">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
             <p class="text-slate-400 text-sm mt-3" id="loading-text">Analyzing keywords...</p>
+            <div class="flex justify-center mt-4">
+                <img src="{% static 'gif/respectaso_processing.gif' %}" alt="Processing..." class="w-48 h-48 rounded-full object-cover shadow-lg shadow-purple-500/10 opacity-90">
+            </div>
         </div>
     </div>
 
@@ -164,12 +167,11 @@
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                     <div class="bg-green-900/20 border border-green-500/20 rounded-lg px-2.5 py-1.5 text-green-300">🎯 Sweet Spot<span class="block text-[10px] text-slate-500 mt-0.5">High pop + low diff</span></div>
                     <div class="bg-green-900/20 border border-green-500/20 rounded-lg px-2.5 py-1.5 text-green-300">✅ Good Target<span class="block text-[10px] text-slate-500 mt-0.5">High pop, ok diff</span></div>
-                    <div class="bg-blue-900/20 border border-blue-500/20 rounded-lg px-2.5 py-1.5 text-blue-300">💎 Hidden Gem<span class="block text-[10px] text-slate-500 mt-0.5">Mid pop + low diff</span></div>
-                    <div class="bg-yellow-900/20 border border-yellow-500/20 rounded-lg px-2.5 py-1.5 text-yellow-300">⚔️ Worth Competing<span class="block text-[10px] text-slate-500 mt-0.5">High pop + high diff</span></div>
-                    <div class="bg-slate-800 border border-white/10 rounded-lg px-2.5 py-1.5 text-slate-300">👍 Decent Option<span class="block text-[10px] text-slate-500 mt-0.5">Mid pop + mid diff</span></div>
-                    <div class="bg-slate-800 border border-white/10 rounded-lg px-2.5 py-1.5 text-slate-300">🔍 Low Volume<span class="block text-[10px] text-slate-500 mt-0.5">Few searches, easy</span></div>
-                    <div class="bg-red-900/20 border border-red-500/20 rounded-lg px-2.5 py-1.5 text-red-300">🚫 Avoid<span class="block text-[10px] text-slate-500 mt-0.5">Low pop + high diff</span></div>
-                    <div class="bg-yellow-900/20 border border-yellow-500/20 rounded-lg px-2.5 py-1.5 text-yellow-300">⚔️ Challenging<span class="block text-[10px] text-slate-500 mt-0.5">Strong competition</span></div>
+                    <div class="bg-blue-900/20 border border-blue-500/20 rounded-lg px-2.5 py-1.5 text-blue-300">💎 Hidden Gem<span class="block text-[10px] text-slate-500 mt-0.5">Moderate pop + very low diff</span></div>
+                    <div class="bg-yellow-900/20 border border-yellow-500/20 rounded-lg px-2.5 py-1.5 text-yellow-300">⚔️ High Competition<span class="block text-[10px] text-slate-500 mt-0.5">Tough to rank via ASO</span></div>
+                    <div class="bg-slate-800 border border-white/10 rounded-lg px-2.5 py-1.5 text-slate-300">👍 Moderate<span class="block text-[10px] text-slate-500 mt-0.5">Reasonable opportunity</span></div>
+                    <div class="bg-slate-800 border border-white/10 rounded-lg px-2.5 py-1.5 text-slate-300">🔍 Low Volume<span class="block text-[10px] text-slate-500 mt-0.5">Few searches</span></div>
+                    <div class="bg-red-900/20 border border-red-500/20 rounded-lg px-2.5 py-1.5 text-red-300">🚫 Avoid<span class="block text-[10px] text-slate-500 mt-0.5">Low opportunity</span></div>
                 </div>
             </div>
         </div>
@@ -268,19 +270,16 @@
                                 <input type="checkbox" value="Hidden Gem" class="insight-cb rounded border-white/20 bg-slate-600 text-purple-500 focus:ring-purple-500 focus:ring-offset-0" {% if 'Hidden Gem' in selected_insights %}checked{% endif %}> 💎 Hidden Gem
                             </label>
                             <label class="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 cursor-pointer text-xs text-white">
-                                <input type="checkbox" value="Worth Competing" class="insight-cb rounded border-white/20 bg-slate-600 text-purple-500 focus:ring-purple-500 focus:ring-offset-0" {% if 'Worth Competing' in selected_insights %}checked{% endif %}> ⚔️ Worth Competing
+                                <input type="checkbox" value="High Competition" class="insight-cb rounded border-white/20 bg-slate-600 text-purple-500 focus:ring-purple-500 focus:ring-offset-0" {% if 'High Competition' in selected_insights %}checked{% endif %}> ⚔️ High Competition
                             </label>
                             <label class="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 cursor-pointer text-xs text-white">
-                                <input type="checkbox" value="Decent Option" class="insight-cb rounded border-white/20 bg-slate-600 text-purple-500 focus:ring-purple-500 focus:ring-offset-0" {% if 'Decent Option' in selected_insights %}checked{% endif %}> 👍 Decent Option
+                                <input type="checkbox" value="Moderate" class="insight-cb rounded border-white/20 bg-slate-600 text-purple-500 focus:ring-purple-500 focus:ring-offset-0" {% if 'Moderate' in selected_insights %}checked{% endif %}> 👍 Moderate
                             </label>
                             <label class="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 cursor-pointer text-xs text-white">
                                 <input type="checkbox" value="Low Volume" class="insight-cb rounded border-white/20 bg-slate-600 text-purple-500 focus:ring-purple-500 focus:ring-offset-0" {% if 'Low Volume' in selected_insights %}checked{% endif %}> 🔍 Low Volume
                             </label>
                             <label class="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 cursor-pointer text-xs text-white">
                                 <input type="checkbox" value="Avoid" class="insight-cb rounded border-white/20 bg-slate-600 text-purple-500 focus:ring-purple-500 focus:ring-offset-0" {% if 'Avoid' in selected_insights %}checked{% endif %}> 🚫 Avoid
-                            </label>
-                            <label class="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 cursor-pointer text-xs text-white">
-                                <input type="checkbox" value="Challenging" class="insight-cb rounded border-white/20 bg-slate-600 text-purple-500 focus:ring-purple-500 focus:ring-offset-0" {% if 'Challenging' in selected_insights %}checked{% endif %}> ⚔️ Challenging
                             </label>
                         </div>
                     </div>
@@ -322,6 +321,12 @@
                                     <svg class="w-3.5 h-3.5 text-slate-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-tip="Weighted score (0–100) based on 7 competition signals across all search results: rating volume, growth speed, brand strength, title relevance, rating quality, market maturity, and publisher diversity."><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 </span>
                                 <span class="sort-indicator text-slate-500">{% if current_sort == 'difficulty' %}{% if current_dir == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</span>
+                            </th>
+                            <th class="text-center text-xs font-medium text-slate-400 px-3 py-2 cursor-pointer hover:text-slate-200 select-none" onclick="sortHistory('opportunity')">
+                                <span class="inline-flex items-center gap-1">Opportunity
+                                    <svg class="w-3.5 h-3.5 text-slate-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-tip="Combined score reflecting how likely you are to rank AND get downloads. High popularity + low difficulty = high opportunity."><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </span>
+                                <span class="sort-indicator text-slate-500">{% if current_sort == 'opportunity' %}{% if current_dir == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</span>
                             </th>
                             <th class="text-center text-xs font-medium text-slate-400 px-3 py-2">Ranking Difficulty
                                 <svg class="w-3.5 h-3.5 text-slate-500 cursor-help inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-tip="Difficulty score computed for reaching the Top 5, Top 10, and Top 20 positions specifically, based on the competitors in each tier."><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -366,6 +371,9 @@
                                 {% if result.difficulty_breakdown.is_brand_keyword %}
                                 <span class="bg-purple-900/20 text-purple-300 border border-purple-500/20 rounded px-1 py-0.5 text-[10px] inline-flex items-center gap-0.5 mt-0.5 cursor-help" data-tip="Brand keyword — '{{ result.keyword }}' matches the #1 app's publisher. Difficulty reflects the full competitive field, not just the #1 app's reviews.">🏷️ Brand</span>
                                 {% endif %}
+                            </td>
+                            <td class="px-3 py-2 text-center text-sm font-semibold" data-sort-value="{{ result.opportunity_score }}">
+                                <span class="text-cyan-400">{{ result.opportunity_score }}</span>
                             </td>
                             <td class="px-3 py-2">
                                 {% with tiers=result.difficulty_breakdown.ranking_tiers %}
@@ -1639,41 +1647,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function getTargetingAdvice(result) {
-        const diff = result.difficulty_score;
-        const pop = result.popularity_score;
-        let icon, color, title, advice;
-
-        if (pop !== null) {
-            if (pop >= 40 && diff <= 40) { icon = '🎯'; color = 'green'; title = 'Sweet Spot'; advice = 'High popularity + low difficulty — ideal keyword to target with good ASO.'; }
-            else if (pop >= 40 && diff <= 60) { icon = '✅'; color = 'green'; title = 'Good Target'; advice = 'Solid popularity with manageable difficulty.'; }
-            else if (pop >= 40 && diff > 60) { icon = '⚔️'; color = 'yellow'; title = 'Worth Competing'; advice = 'High demand but tough competition. Consider long-tail variants.'; }
-            else if (pop >= 30 && pop < 40 && diff <= 40) { icon = '💎'; color = 'blue'; title = 'Hidden Gem'; advice = 'Moderate volume with little competition. Good for niche apps.'; }
-            else if (pop >= 30 && pop < 40 && diff <= 60) { icon = '👍'; color = 'slate'; title = 'Decent Option'; advice = 'Moderate demand and competition. Can work as a supporting keyword.'; }
-            else if (pop < 30 && diff <= 30) { icon = '🔍'; color = 'slate'; title = 'Low Volume'; advice = 'Easy to rank but few people search for this. Best as a supporting keyword.'; }
-            else if (pop < 30 && diff > 30) { icon = '🚫'; color = 'red'; title = 'Avoid'; advice = 'Low search volume with notable competition.'; }
-            else { icon = '⚔️'; color = 'yellow'; title = 'Challenging'; advice = 'Strong competition. Focus on long-tail variants.'; }
-        } else {
-            if (diff <= 25) { icon = '🟢'; color = 'green'; title = 'Easy to Rank'; advice = 'Low competition — a well-optimized app can rank quickly.'; }
-            else if (diff <= 50) { icon = '🟡'; color = 'yellow'; title = 'Moderate Competition'; advice = 'Achievable with strong ASO.'; }
-            else if (diff <= 75) { icon = '🟠'; color = 'orange'; title = 'Competitive'; advice = 'Consider long-tail variants.'; }
-            else { icon = '🔴'; color = 'red'; title = 'Very Competitive'; advice = 'Dominated by established apps. Target easier keywords first.'; }
-        }
-
-        const colorMap = {
-            green: 'bg-green-900/20 border-green-500/20 text-green-300',
-            yellow: 'bg-yellow-900/20 border-yellow-500/20 text-yellow-300',
-            blue: 'bg-blue-900/20 border-blue-500/20 text-blue-300',
-            orange: 'bg-orange-900/20 border-orange-500/20 text-orange-300',
-            red: 'bg-red-900/20 border-red-500/20 text-red-300',
-            slate: 'bg-slate-800 border-white/10 text-slate-300',
+    function classificationBadge(label) {
+        // Render a classification badge from a server-provided label.
+        // classify_keyword() in aso/scoring.py is the single source of truth.
+        const map = {
+            'Sweet Spot':       {icon: '🎯', css: 'bg-green-900/20 border-green-500/20 text-green-300',  advice: 'High search volume + low competition — the ideal ASO target.'},
+            'Good Target':      {icon: '✅', css: 'bg-green-900/20 border-green-500/20 text-green-300',  advice: 'Solid search volume with manageable competition.'},
+            'Hidden Gem':       {icon: '💎', css: 'bg-blue-900/20 border-blue-500/20 text-blue-300',     advice: 'Moderate search volume with minimal competition — a genuine opportunity others have overlooked.'},
+            'High Competition': {icon: '⚔️', css: 'bg-yellow-900/20 border-yellow-500/20 text-yellow-300', advice: 'Dominated by established apps with thousands of ratings. Focus on long-tail variants instead.'},
+            'Moderate':         {icon: '👍', css: 'bg-slate-800 border-white/10 text-slate-300',          advice: 'Reasonable opportunity. Can work as a supporting keyword.'},
+            'Low Volume':       {icon: '🔍', css: 'bg-slate-800 border-white/10 text-slate-300',          advice: 'Very few searches. Only worth targeting if highly relevant to your app.'},
+            'Avoid':            {icon: '🚫', css: 'bg-red-900/20 border-red-500/20 text-red-300',        advice: 'Low opportunity. Effort better spent elsewhere.'},
         };
-
+        const info = map[label] || map['Moderate'];
         return `
-            <div class="${colorMap[color]} border rounded-lg p-2.5">
+            <div class="${info.css} border rounded-lg p-2.5">
                 <p class="text-[10px] uppercase tracking-wide text-slate-500 mb-1">ASO Targeting</p>
-                <p class="text-xs font-medium">${icon} ${title}</p>
-                <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">${advice}</p>
+                <p class="text-xs font-medium">${info.icon} ${label}</p>
+                <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">${info.advice}</p>
             </div>`;
     }
 
@@ -1701,7 +1692,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="text-lg">🏆</span>
                 <div>
                     <h3 class="text-sm font-semibold text-white">Country Opportunity Comparison</h3>
-                    <p class="text-xs text-slate-500">Opportunity = Popularity × (100 − Difficulty) / 100. Higher is better.</p>
+                    <p class="text-xs text-slate-500">Opportunity combines search volume and competition — higher means more realistic ranking potential.</p>
                 </div>
             </div>
             <div class="overflow-x-auto">
@@ -1910,8 +1901,18 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <p class="${difficultyColorClass} text-xs mt-0.5 font-medium">${result.difficulty_label}</p>
                                 ${brandBadge}
                             </div>
+                            <div class="bg-slate-800 rounded-lg p-2.5">
+                                <p class="text-xs text-slate-400 mb-0.5 uppercase tracking-wide inline-flex items-center gap-1">Opportunity
+                                    <span class="relative group/otip">
+                                        <svg class="w-3 h-3 text-slate-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 bg-slate-900 border border-white/10 rounded-lg p-2.5 text-[10px] text-slate-300 leading-snug opacity-0 pointer-events-none group-hover/otip:opacity-100 transition-opacity z-50 shadow-lg normal-case tracking-normal">Combined score reflecting how likely you are to rank AND get downloads. High popularity + low difficulty = high opportunity.</span>
+                                    </span>
+                                </p>
+                                <span class="text-2xl font-bold text-cyan-400">${result.opportunity_score}</span>
+                                <span class="text-slate-500 text-xs ml-1">/ 100</span>
+                            </div>
                             ${getAppRankDisplay(result)}
-                            ${getTargetingAdvice(result)}
+                            ${classificationBadge(result.classification)}
                         </div>
                     </div>
                 </div>

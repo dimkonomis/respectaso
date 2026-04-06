@@ -466,6 +466,22 @@ class ITunesSearchService:
             logger.error(f"iTunes lookup failed for id {track_id}: {e}")
             return None
 
+    def lookup_full_description(self, track_id: int, country: str = "us") -> str:
+        """Look up an app and return its full (un-truncated) description."""
+        try:
+            response = requests.get(
+                self.LOOKUP_URL,
+                params={"id": track_id, "country": country},
+                timeout=30,
+            )
+            response.raise_for_status()
+            results = response.json().get("results", [])
+            if results:
+                return results[0].get("description", "")
+            return ""
+        except Exception:
+            return ""
+
     def search_apps(
         self, keyword: str, country: str = "us", limit: int = 10
     ) -> list[dict]:
@@ -565,7 +581,7 @@ class DownloadEstimator:
          tap on the result at each position.  Follows a well-documented
          power-law decay curve.
       3. Conversion rate — percentage of taps that become installs.
-         Varies by category/price but ~45–55 % for free apps is typical.
+         Varies by category/listing quality; 5–20 % range used.
 
     All numbers are rough estimates shown as ranges (low–high).
     """

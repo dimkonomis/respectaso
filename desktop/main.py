@@ -46,7 +46,19 @@ def ensure_secret_key(data_dir):
 
 
 def find_free_port():
-    """Find an available TCP port on localhost."""
+    """Find an available TCP port on localhost in the 8000–8099 range.
+
+    CSRF_TRUSTED_ORIGINS in core/settings.py is pre-configured for this
+    range. Falls back to any available port if all 100 ports are taken.
+    """
+    for port in range(8000, 8100):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(("127.0.0.1", port))
+                return port
+        except OSError:
+            continue
+    # Fallback: let the OS pick any available port
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]

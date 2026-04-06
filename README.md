@@ -39,7 +39,7 @@ Most ASO tools require paid subscriptions, API keys, and send your keyword resea
 | **App Rank Tracking** | Add your apps and see where you rank for each keyword alongside competitor data |
 | **Search History** | Browse past keyword research with sorting, filtering, and expandable detail views |
 | **CSV Export** | Export your keyword research data for use in spreadsheets |
-| **ASO Targeting Advice** | Automatic keyword classification (Sweet Spot, Hidden Gem, Low Volume, Avoid, etc.) based on popularity vs. difficulty |
+| **ASO Targeting Advice** | Automatic keyword classification (Sweet Spot, Good Target, Hidden Gem, High Competition, Moderate, Low Volume, Avoid) based on opportunity scoring |
 
 ## Quick Start
 
@@ -72,9 +72,9 @@ Your keywords, search history, and settings are stored at:
 This data survives app updates and deletions. Delete this folder only if you want a completely fresh start.
 
 <details>
-<summary><strong>🐳 Docker (legacy)</strong></summary>
+<summary><strong>🐳 Docker (free features only)</strong></summary>
 
-Docker was the original distribution method. While still supported, we recommend switching to the native Mac app for a simpler experience.
+Docker provides the **free edition** of RespectASO (keyword research, difficulty scoring, ranking tracking). AI-powered Pro features require the native macOS app above.
 
 #### Prerequisites
 
@@ -152,11 +152,12 @@ A 7-factor weighted system that estimates how hard it is to rank:
 
 ### Download Estimates
 
-A 3-stage pipeline estimates daily downloads per ranking position:
+A 4-stage pipeline estimates daily downloads per ranking position:
 
 1. **Popularity → Daily Searches** — piecewise-linear mapping calibrated against real App Store observations
-2. **Position → Tap-Through Rate** — power-law decay from position #1 (30%) to position #20 (0.06%)
-3. **Tap → Install Conversion** — range of 35%–55% for free apps
+2. **Position → Tap-Through Rate** — power-law decay from position #1 (30%) to position #20 (0.07%)
+3. **Tap → Install Conversion** — range of 5% (unknown indie app, weak listing) to 20% (category leader with strong brand)
+4. **Market-Size Scaling** — search volumes are calibrated for the US App Store; other countries are scaled by relative market size
 
 Results are shown as conservative–optimistic ranges per position, with tier breakdowns for Top 5, Top 6–10, and Top 11–20.
 
@@ -216,7 +217,7 @@ See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
 
 ## Contact
 
-[respectlytics@loheden.com](mailto:respectlytics@loheden.com)
+[respectaso@loheden.com](mailto:respectaso@loheden.com)
 
 ---
 

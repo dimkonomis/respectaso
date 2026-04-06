@@ -48,8 +48,7 @@
                 Download the <code class="bg-amber-900/40 px-1 py-0.5 rounded">.dmg</code> for a faster experience — no Docker required.
             </p>
             <div class="flex items-center gap-2 flex-shrink-0">
-                <a href="https://github.com/respectlytics/respectaso/releases/latest"
-                   target="_blank" rel="noopener"
+                <a href="{% url 'aso:download_dmg' %}"
                    class="text-xs font-medium text-amber-100 bg-amber-600/40 hover:bg-amber-600/60 border border-amber-500/30 rounded-lg px-2.5 py-1 transition-colors whitespace-nowrap">
                     Download .dmg
                 </a>
@@ -83,6 +82,20 @@
                        class="text-sm {% if request.resolver_match.url_name == 'opportunity' %}text-purple-400 font-medium{% else %}text-slate-300 hover:text-white{% endif %} transition-colors">
                         Opportunity
                     </a>
+                    <span class="border-l border-white/10 h-4"></span>
+                    <a href="{% url 'aso:pro_promo_researcher' %}"
+                       class="text-sm {% if request.resolver_match.url_name == 'pro_promo_researcher' %}text-emerald-400 font-medium{% else %}text-emerald-300/70 hover:text-emerald-300{% endif %} transition-colors">
+                        AI Researcher
+                    </a>
+                    <a href="{% url 'aso:pro_promo_competitor' %}"
+                       class="text-sm {% if request.resolver_match.url_name == 'pro_promo_competitor' %}text-emerald-400 font-medium{% else %}text-emerald-300/70 hover:text-emerald-300{% endif %} transition-colors">
+                        AI Competitor
+                    </a>
+                    <a href="{% url 'aso:pro_promo_simulator' %}"
+                       class="text-sm {% if request.resolver_match.url_name == 'pro_promo_simulator' %}text-emerald-400 font-medium{% else %}text-emerald-300/70 hover:text-emerald-300{% endif %} transition-colors">
+                        ASO Simulator
+                    </a>
+                    <span class="border-l border-white/10 h-4"></span>
                     <a href="{% url 'aso:methodology' %}"
                        class="text-sm {% if request.resolver_match.url_name == 'methodology' %}text-purple-400 font-medium{% else %}text-slate-300 hover:text-white{% endif %} transition-colors">
                         Methodology
@@ -114,11 +127,10 @@
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
                 <p>
-                    RespectASO is free, open-source software (AGPL-3.0) by
                     <a href="https://respectlytics.com/?utm_source=respectaso&utm_medium=footer&utm_campaign=oss"
                        target="_blank" rel="noopener" class="text-purple-400 hover:text-purple-300 transition-colors">
                         Respectlytics
-                    </a>
+                    </a>: Mobile analytics built for easy privacy compliance.
                     ·
                     <a href="https://respectlytics.com/?utm_source=respectaso&utm_medium=footer_cta&utm_campaign=oss"
                        target="_blank" rel="noopener"

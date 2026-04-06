@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Current version — update on each release
-VERSION = "2.2.1"
+VERSION = "2.3.0"
 
 # Native macOS app vs Docker detection
 IS_NATIVE_APP = os.environ.get("RESPECTASO_NATIVE") == "1" or getattr(sys, "frozen", False)
@@ -16,14 +16,14 @@ IS_NATIVE_APP = os.environ.get("RESPECTASO_NATIVE") == "1" or getattr(sys, "froz
 DATA_DIR = Path(os.environ.get("DATA_DIR", BASE_DIR / "data"))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-env_file = DATA_DIR / ".env"
+# Load .env from project root (dev) or DATA_DIR (production/Docker)
+env_file = BASE_DIR / ".env"
+if not env_file.exists():
+    env_file = DATA_DIR / ".env"
 if env_file.exists():
     load_dotenv(env_file)
 
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY",
-    "django-insecure-dev-key-change-me-in-production",
-)
+SECRET_KEY = os.environ.get("SECRET_KEY", "") or "django-insecure-dev-key-change-me-in-production"
 
 DEBUG = os.environ.get("DEBUG", "True").lower() in ("true", "1", "yes")
 

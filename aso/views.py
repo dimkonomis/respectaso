@@ -15,6 +15,7 @@ from django.views.decorators.http import require_POST
 
 from .forms import AppForm, KeywordSearchForm, OpportunitySearchForm, COUNTRY_CHOICES
 from .models import App, Keyword, SearchResult
+from .scoring import calc_opportunity, classify_keyword, CLASSIFICATION_LABELS
 from .services import (
     DifficultyCalculator,
     DownloadEstimator,
@@ -96,7 +97,7 @@ def dashboard_view(request):
         diff_max = None
 
     # Get the latest result ID for each keyword+country pair
-    from django.db.models import Case, IntegerField, Max, Q, Value, When
+    from django.db.models import Case, IntegerField, Max, Value, When
     from django.db.models.functions import Lower
 
     latest_filter = {}
@@ -151,24 +152,12 @@ def dashboard_view(request):
             difficulty_score__lte=diff_max,
         )
 
-    # Apply insight filter — translate labels to ORM Q conditions
-    # These mirror the ranges in SearchResult.targeting_advice
-    INSIGHT_Q = {
-        "Sweet Spot": Q(popularity_score__gte=40, difficulty_score__lte=40),
-        "Good Target": Q(popularity_score__gte=40, difficulty_score__gt=40, difficulty_score__lte=60),
-        "Worth Competing": Q(popularity_score__gte=40, difficulty_score__gt=60),
-        "Hidden Gem": Q(popularity_score__gte=30, popularity_score__lt=40, difficulty_score__lte=40),
-        "Decent Option": Q(popularity_score__gte=30, popularity_score__lt=40, difficulty_score__gt=40, difficulty_score__lte=60),
-        "Low Volume": Q(popularity_score__lt=30, difficulty_score__lte=30) & Q(popularity_score__isnull=False),
-        "Avoid": Q(popularity_score__lt=30, difficulty_score__gt=30) & Q(popularity_score__isnull=False),
-        "Challenging": Q(popularity_score__gte=30, popularity_score__lt=40, difficulty_score__gt=60),
-    }
-    valid_insights = [i for i in insight_filter if i in INSIGHT_Q]
+    # Apply insight filter using the stored classification column.
+    # classify_keyword() is the single source of truth — the column
+    # is set on save(), so a simple __in filter is always exact.
+    valid_insights = [i for i in insight_filter if i in CLASSIFICATION_LABELS]
     if valid_insights:
-        combined = Q()
-        for label in valid_insights:
-            combined |= INSIGHT_Q[label]
-        results_qs = results_qs.filter(combined)
+        results_qs = results_qs.filter(classification__in=valid_insights)
 
     sorted_results = None
 
@@ -202,6 +191,13 @@ def dashboard_view(request):
     elif sort_by == "difficulty":
         difficulty_order = "difficulty_score" if sort_dir == "asc" else "-difficulty_score"
         results_qs = results_qs.order_by(difficulty_order, "-searched_at")
+    elif sort_by == "opportunity":
+        sorted_results = list(results_qs)
+        reverse = sort_dir == "desc"
+        sorted_results.sort(
+            key=lambda r: (r.opportunity_score, r.searched_at.timestamp()),
+            reverse=reverse,
+        )
     elif sort_by == "country":
         country_order = "country" if sort_dir == "asc" else "-country"
         results_qs = results_qs.order_by(country_order, "-searched_at")
@@ -422,12 +418,15 @@ def search_view(request):
                 country=country,
             )
 
+            opportunity = calc_opportunity(popularity or 0, difficulty_score)
+
             country_results.append(
                 {
                     "keyword": kw_text,
                     "country": country,
                     "popularity_score": popularity,
                     "difficulty_score": difficulty_score,
+                    "opportunity_score": opportunity,
                     "difficulty_label": search_result.difficulty_label,
                     "difficulty_color": search_result.difficulty_color,
                     "difficulty_breakdown": breakdown,
@@ -436,6 +435,7 @@ def search_view(request):
                     "app_rank": app_rank,
                     "app_name": app.name if app else None,
                     "app_icon": app.icon_url if app else None,
+                    "classification": search_result.classification,
                 }
             )
         results_by_country[country] = country_results
@@ -452,7 +452,7 @@ def search_view(request):
                     kw_map[kw] = {}
                 pop = r["popularity_score"] or 0
                 diff = r["difficulty_score"]
-                opp = round(pop * (100 - diff) / 100)
+                opp = calc_opportunity(pop, diff)
                 kw_map[kw][country] = {
                     "popularity": pop,
                     "difficulty": diff,
@@ -544,7 +544,7 @@ def opportunity_search_country_view(request):
     else:
         diff_label = "Extreme"
 
-    opportunity = round(popularity * (100 - difficulty_score) / 100) if popularity else 0
+    opportunity = calc_opportunity(popularity, difficulty_score)
     top_competitor = competitors[0]["trackName"] if competitors else "—"
     top_ratings = competitors[0].get("userRatingCount", 0) if competitors else 0
 
@@ -629,7 +629,7 @@ def opportunity_search_view(request):
         else:
             diff_label = "Extreme"
 
-        opportunity = round(popularity * (100 - difficulty_score) / 100) if popularity else 0
+        opportunity = calc_opportunity(popularity, difficulty_score)
         top_competitor = competitors[0]["trackName"] if competitors else "—"
         top_ratings = competitors[0].get("userRatingCount", 0) if competitors else 0
 
@@ -645,6 +645,7 @@ def opportunity_search_view(request):
             "competitor_count": len(competitors),
             "top_competitor": top_competitor,
             "top_ratings": top_ratings,
+            "classification": classify_keyword(popularity or 0, difficulty_score),
         })
 
     results.sort(key=lambda x: x["opportunity"], reverse=True)
@@ -724,7 +725,12 @@ def app_lookup_view(request):
     url_match = re.search(r"/id(\d+)", query)
     if url_match:
         track_id = int(url_match.group(1))
-        app_data = itunes_service.lookup_by_id(track_id)
+        # Extract country code from URL (e.g. apps.apple.com/de/app/...)
+        country_match = re.search(
+            r"apps\.apple\.com/([a-z]{2})/", query, re.IGNORECASE
+        )
+        country = country_match.group(1).lower() if country_match else "us"
+        app_data = itunes_service.lookup_by_id(track_id, country=country)
         if app_data:
             return JsonResponse(
                 {
@@ -959,7 +965,7 @@ def export_history_csv_view(request):
     pop_min = int(pop_min_raw) if pop_min_raw and pop_min_raw.isdigit() else None
     diff_max = int(diff_max_raw) if diff_max_raw and diff_max_raw.isdigit() else None
 
-    from django.db.models import Max, Q
+    from django.db.models import Max
 
     # Deduplicate: keep only the latest result per keyword+country
     latest_filter = {}
@@ -998,23 +1004,10 @@ def export_history_csv_view(request):
             difficulty_score__lte=diff_max,
         )
 
-    # Apply insight filter (same mapping as dashboard_view)
-    INSIGHT_Q = {
-        "Sweet Spot": Q(popularity_score__gte=40, difficulty_score__lte=40),
-        "Good Target": Q(popularity_score__gte=40, difficulty_score__gt=40, difficulty_score__lte=60),
-        "Worth Competing": Q(popularity_score__gte=40, difficulty_score__gt=60),
-        "Hidden Gem": Q(popularity_score__gte=30, popularity_score__lt=40, difficulty_score__lte=40),
-        "Decent Option": Q(popularity_score__gte=30, popularity_score__lt=40, difficulty_score__gt=40, difficulty_score__lte=60),
-        "Low Volume": Q(popularity_score__lt=30, difficulty_score__lte=30) & Q(popularity_score__isnull=False),
-        "Avoid": Q(popularity_score__lt=30, difficulty_score__gt=30) & Q(popularity_score__isnull=False),
-        "Challenging": Q(popularity_score__gte=30, popularity_score__lt=40, difficulty_score__gt=60),
-    }
-    valid_insights = [i for i in insight_filter if i in INSIGHT_Q]
+    # Apply insight filter using stored classification column
+    valid_insights = [i for i in insight_filter if i in CLASSIFICATION_LABELS]
     if valid_insights:
-        combined = Q()
-        for label in valid_insights:
-            combined |= INSIGHT_Q[label]
-        results_qs = results_qs.filter(combined)
+        results_qs = results_qs.filter(classification__in=valid_insights)
 
     results_qs = results_qs.order_by("-searched_at")
 
@@ -1166,6 +1159,34 @@ def auto_refresh_status_view(request):
     return JsonResponse(get_status())
 
 
+_dmg_url_cache = {"url": None, "expires": 0}
+
+GITHUB_RELEASES_URL = "https://github.com/respectlytics/respectaso/releases/latest"
+GITHUB_API_LATEST = "https://api.github.com/repos/respectlytics/respectaso/releases/latest"
+
+
+def download_dmg_view(request):
+    """Redirect to the latest .dmg download URL (direct file, no GitHub page)."""
+    now = time.time()
+    if _dmg_url_cache["url"] and now < _dmg_url_cache["expires"]:
+        return redirect(_dmg_url_cache["url"])
+
+    try:
+        req = urllib.request.Request(GITHUB_API_LATEST, headers={"Accept": "application/vnd.github.v3+json"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+        for asset in data.get("assets", []):
+            if asset.get("name", "").endswith(".dmg"):
+                url = asset["browser_download_url"]
+                _dmg_url_cache["url"] = url
+                _dmg_url_cache["expires"] = now + 300
+                return redirect(url)
+    except Exception:
+        logger.warning("Failed to fetch latest DMG URL from GitHub API")
+
+    return redirect(_dmg_url_cache.get("url") or GITHUB_RELEASES_URL)
+
+
 def keyword_trend_view(request, keyword_id):
     """
     Return historical trend data for a keyword across all countries.
@@ -1197,3 +1218,18 @@ def keyword_trend_view(request, keyword_id):
         "app_name": keyword_obj.app.name if keyword_obj.app else None,
         "data_points": data_points,
     })
+
+
+def pro_promo_researcher_view(request):
+    """Promotional page for AI Niche Researcher (free version)."""
+    return render(request, "aso/pro_promo/ai_researcher.html")
+
+
+def pro_promo_competitor_view(request):
+    """Promotional page for AI Competitor Analyzer (free version)."""
+    return render(request, "aso/pro_promo/ai_competitor.html")
+
+
+def pro_promo_simulator_view(request):
+    """Promotional page for ASO Score Simulator (free version)."""
+    return render(request, "aso/pro_promo/simulator.html")
